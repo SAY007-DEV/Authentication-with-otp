@@ -1,9 +1,17 @@
 import mongoose from "mongoose";
+import dotenv from 'dotenv';
 
-const dbconnect= async ()=>{
-    await mongoose.connect('mongodb://localhost:27017/authpro');
-    console.log('mongodb connected');
-    
-}
+dotenv.config();
+
+const dbconnect = async () => {
+    try {
+        const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/authpro';
+        await mongoose.connect(mongoURI);
+        console.log('MongoDB connected successfully');
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+        process.exit(1);
+    }
+};
 
 export default dbconnect;
