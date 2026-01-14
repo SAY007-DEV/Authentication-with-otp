@@ -54,7 +54,7 @@ const RegisterPage = () => {
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed!';
-      toast.update(toastId, { render: message, type: 'error', isLoading: false, autoClose: 3000 });
+      toast.update(toastId, { render: message, type: 'error', isLoading: false, autoClose: 5000 });
     } finally {
       setIsLoading(false);
     }
