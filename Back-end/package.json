@@ -2,9 +2,9 @@
   "name": "back-end",
   "version": "1.0.0",
   "main": "index.js",
-  "type":"module",
+  "type": "module",
   "scripts": {
-    "npm run dev":"nodemon server.js"
+    "dev":"nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +18,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
     "nodemailer": "^7.0.3",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.11"
   }
 }
