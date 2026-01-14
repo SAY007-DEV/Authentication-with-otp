@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const RegisterPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,26 +23,43 @@ const RegisterPage = () => {
     let password = '';
     for (let i = 0; i < 12; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
+     
     }
+    
     setFormData({ ...formData, password });
     toast.success('Random password generated!');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match!');
       return;
     }
-    if (!formData.name || !formData.email || !formData.password) {
+    const { name, email, password } = formData;
+    if (!name || !email || !password) {
       toast.error('Please fill in all fields!');
       return;
     }
-    // Simulate registration success
-    toast.success('Registration successful!');
-    // Reset form
-    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+
+    const toastId = toast.loading('Registering...');
+    setIsLoading(true);
+
+    try {
+      const response = await axios.post('http://localhost:8080/Auth/v1/register', { name, email, password });
+      if (response.status === 201) {
+        toast.update(toastId, { render: 'Registration successful!', type: 'success', isLoading: false, autoClose: 3000 });
+        // Reset form
+        setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registration failed!';
+      toast.update(toastId, { render: message, type: 'error', isLoading: false, autoClose: 3000 });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center relative overflow-hidden">
@@ -134,9 +153,10 @@ const RegisterPage = () => {
           </div>
           <button
             type="submit"
-            className="w-full py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white font-semibold hover:bg-white/30 transition duration-300 shadow-lg"
+            className="w-full py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white font-semibold hover:bg-white/30 transition duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
-            Register
+            {isLoading ? 'Registering...' : 'Register'}
           </button>
         </form>
       </div>
