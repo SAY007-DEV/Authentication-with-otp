@@ -46,7 +46,7 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8080/Auth/v1/register', { name, email, password });
+      const response = await axios.post('http://localhost:8000/Auth/v1/register', { name, email, password });
       if (response.status === 201) {
         toast.update(toastId, { render: 'Registration successful!', type: 'success', isLoading: false, autoClose: 3000 });
         // Reset form

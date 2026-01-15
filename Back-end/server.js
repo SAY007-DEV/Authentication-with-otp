@@ -47,7 +47,7 @@ app.use((req, res) => {
     res.status(404).json({ message: 'Route not found' });
 });
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 8000;
 
 // Server running
 app.listen(port, () => {
