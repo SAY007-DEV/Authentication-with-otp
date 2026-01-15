@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
-
+import { useNavigate } from 'react-router-dom';
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -13,7 +13,7 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const navigate = useNavigate();
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -57,6 +57,7 @@ const RegisterPage = () => {
       toast.update(toastId, { render: message, type: 'error', isLoading: false, autoClose: 5000 });
     } finally {
       setIsLoading(false);
+      navigate('/otp');
     }
   };
 
