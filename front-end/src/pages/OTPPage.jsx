@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 const OTPPage = () => {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-
+  const navigate = useNavigate();
   const handleRequestOTP = (e) => {
     e.preventDefault();
     if (!email) {
@@ -24,20 +25,27 @@ const OTPPage = () => {
     if (!otp) {
       toast.error('Please enter the OTP!');
       return;
+
     }
     setIsVerifying(true);
     // Simulate verification
-    setTimeout(() => {
-      if (otp === '123456') { // Mock correct OTP
-        toast.success('OTP verified successfully!');
-        setOtpSent(false);
-        setEmail('');
-        setOtp('');
-      } else {
-        toast.error('Invalid OTP!');
-      }
-      setIsVerifying(false);
-    }, 1000);
+    try {
+        axios.post('http://localhost:8000/Auth/v1/verify-otp', { email, otp })
+    } catch (error) {
+        
+    }
+    // setTimeout(() => {
+    //   if (otp === '123456') { // Mock correct OTP
+    //     toast.success('OTP verified successfully!');
+    //     setOtpSent(false);
+    //     setEmail('');
+    //     setOtp('');
+    //     navigate('/home');
+    //   } else {
+    //     toast.error('Invalid OTP!');
+    //   }
+    //   setIsVerifying(false);
+    // }, 1000);
   };
 
   return (
