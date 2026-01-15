@@ -1,17 +1,35 @@
 import crypto from 'crypto';
 import User from '../Database/model.js';
+import Otp from '../Database/otp.js';
 import Sendotp from '../Utilitys/SendMail.js';
 
 const Register = async (req, res) => {
     const { email, password } = req.body;
+
+    if (!email || !password ) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
     try {
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const newUser = new User({ email, password });
+        const otpRecord = await Otp.findOne({ email: normalizedEmail });
+        if (!otpRecord) {
+            return res.status(400).json({ message: 'OTP expired or not requested' });
+        }
+
+        if (otpRecord.otp !== otp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        const newUser = new User({ email: normalizedEmail, password });
         await newUser.save();
+        await Otp.deleteOne({ email: normalizedEmail }); 
         return res.status(201).json({ message: 'New user created successfully' });
     } catch (error) {
         console.error('Registration error:', error);
@@ -22,18 +40,28 @@ const Register = async (req, res) => {
 const Otpsend = async (req, res) => {
     const { email } = req.body;
 
+    if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
     try {
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "User does not exist" });
+        const existingUser = await User.findOne({ email: normalizedEmail });
+        if (existingUser) {
+            return res.status(400).json({ message: "User already exists" });
         }
 
         const otp = crypto.randomInt(300000, 999999).toString();
-        user.otp = otp;
-        user.validity = Date.now() + 7 * 60 * 1000; // 7 minutes validity
-        await user.save();
+        
+        // Upsert OTP (Create or Update)
+        await Otp.findOneAndUpdate(
+            { email: normalizedEmail },
+            { email: normalizedEmail, otp, createdAt: Date.now() },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
 
-        await Sendotp(email, otp);
+        await Sendotp(normalizedEmail, otp);
         return res.status(200).json({ message: "OTP sent to your email" });
     } catch (error) {
         console.error('OTP sending error:', error);
@@ -44,28 +72,31 @@ const Otpsend = async (req, res) => {
 const Verifyotp = async (req, res) => {
     const { email, otp } = req.body;
 
+    if (!email || !otp) {
+        return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
     try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: normalizedEmail });
         if (!user) {
             return res.status(404).json({ message: "User does not exist" });
         }
 
-        if (!user.otp || !user.validity) {
-            return res.status(400).json({ message: "No OTP requested" });
+        // Find OTP from Otp collection
+        const otpRecord = await Otp.findOne({ email: normalizedEmail });
+        if (!otpRecord) {
+            return res.status(400).json({ message: "OTP expired or not requested" });
         }
 
-        if (user.otp !== otp) {
+        if (otpRecord.otp !== otp) {
             return res.status(400).json({ message: "Invalid OTP" });
         }
 
-        if (user.validity < Date.now()) {
-            return res.status(400).json({ message: "OTP has expired" });
-        }
+        // OTP is valid (createdAt auto-expires by Mongo), so just delete after verifying
+        await Otp.deleteOne({ email: normalizedEmail });
 
-        user.otp = null;
-        user.validity = null;
-        await user.save();
-        
         return res.status(200).json({ message: "OTP verified successfully" });
     } catch (error) {
         console.error('OTP verification error:', error);
