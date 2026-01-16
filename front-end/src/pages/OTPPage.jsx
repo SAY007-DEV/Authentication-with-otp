@@ -29,11 +29,24 @@ const OTPPage = () => {
     }
     setIsVerifying(true);
     // Simulate verification
-    try {
-        axios.post('http://localhost:8000/Auth/v1/verify-otp', { email, otp })
-    } catch (error) {
-        
-    }
+    axios.post('http://localhost:8000/Auth/v1/verify-otp', { email, otp })
+         .then(res=>
+         {
+          if(res.status===200){
+            toast.success('OTP verified successfully!');
+            setOtpSent(false);
+            setEmail('');
+            setOtp('');
+            navigate('/home');
+          }
+         }
+         )
+        .catch(err=>{
+          toast.error('Invalid OTP!');
+        })
+        .finally(()=>{
+          setIsVerifying(false);
+        });
     // setTimeout(() => {
     //   if (otp === '123456') { // Mock correct OTP
     //     toast.success('OTP verified successfully!');
@@ -47,7 +60,7 @@ const OTPPage = () => {
     //   setIsVerifying(false);
     // }, 1000);
   };
-
+    
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center relative overflow-hidden">
       {/* Snow Animation */}
